@@ -1,6 +1,6 @@
 # Sagasu
 
-[![Build status](https://ci.appveyor.com/api/projects/status/oc937oppd38x1y4y/branch/master?svg=true)](https://ci.appveyor.com/project/DoumanAsh/sagasu/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/tm9rhcfsx0qv4y70/branch/master?svg=true)](https://ci.appveyor.com/project/DoumanAsh/sagasu/branch/master)
 [![Build Status](https://travis-ci.org/DoumanAsh/sagasu.svg?branch=master)](https://travis-ci.org/DoumanAsh/sagasu)
 [![Crates.io](https://img.shields.io/crates/v/sagasu.svg)](https://crates.io/crates/sagasu)
 [![Dependency status](https://deps.rs/crate/sagasu/0.1.0/status.svg)](https://deps.rs/crate/sagasu)
