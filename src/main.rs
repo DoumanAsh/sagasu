@@ -55,8 +55,6 @@ fn main() {
         let mut stdout = stdout.lock();
 
         for path in path.into_iter().filter(path_exist_filter) {
-            println!("Path: {}", path.display());
-
             let walker = WalkDir::new(path).min_depth(options.min_hop)
                                            .max_depth(options.max_hop.unwrap_or(std::usize::MAX))
                                            .follow_links(flags.sym)
