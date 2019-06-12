@@ -51,7 +51,11 @@ fn main() {
     };
 
     {
-        let stdout = termcolor::StandardStream::stdout(termcolor::ColorChoice::Auto);
+        let color = match flags.machine {
+            true => termcolor::ColorChoice::Never,
+            false => termcolor::ColorChoice::Auto,
+        };
+        let stdout = termcolor::StandardStream::stdout(color);
         let mut stdout = stdout.lock();
 
         for path in path.into_iter().filter(path_exist_filter) {

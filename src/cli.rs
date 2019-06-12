@@ -57,5 +57,8 @@ pub struct Flags {
     pub sym: bool,
     #[structopt(short = "q", long = "quiet")]
     ///Ignore errors during search.
-    pub quiet: bool
+    pub quiet: bool,
+    #[structopt(short = "m", long = "machine")]
+    ///Specifies that usage comes from another application. Disables colors.
+    pub machine: bool,
 }
