@@ -38,7 +38,10 @@ pub struct Options {
     pub min_hop: usize,
     #[structopt(long = "hop")]
     ///Specifies depth of recursion.
-    pub max_hop: Option<usize>
+    pub max_hop: Option<usize>,
+    #[structopt(long = "sep", default_value = "\n", raw(set = "structopt::clap::ArgSettings::HideDefaultValue"))]
+    ///Specifies separator character between each entry. By default newline
+    pub sep: char,
 }
 
 #[derive(Debug, Copy, Clone, StructOpt)]

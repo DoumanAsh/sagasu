@@ -79,7 +79,7 @@ fn main() {
                         let _ = write!(&mut stdout, "{}", mat.as_str());
                         let _ = stdout.reset();
 
-                        let _ = writeln!(&mut stdout, "{}", &file_name[mat.end()..]);
+                        let _ = write!(&mut stdout, "{}{}", &file_name[mat.end()..], options.sep);
                     },
                     None => ()
                 }
