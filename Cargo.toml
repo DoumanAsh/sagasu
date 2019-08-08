@@ -1,6 +1,6 @@
 [package]
 name = "sagasu"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Douman <douman@gmx.se>"]
 edition = "2018"
 repository = "https://github.com/DoumanAsh/sagasu"
@@ -13,10 +13,7 @@ walkdir = "2"
 regex = "1"
 termcolor = "1"
 
-[dependencies.structopt]
-version = "0.2"
-features = ["wrap_help", "suggestions"]
-
 [profile.release]
 lto = true
 opt-level = "z"
+codegen-units = 1
