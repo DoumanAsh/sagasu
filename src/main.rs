@@ -1,3 +1,5 @@
+#![no_main]
+
 mod cli;
 
 use std::cell::Cell;
@@ -7,8 +9,11 @@ use std::io::Write;
 use termcolor::WriteColor;
 use walkdir::{self, WalkDir};
 
-fn main() {
-    let args = match cli::Args::new() {
+#[no_mangle]
+unsafe extern "C" fn main(argc: isize, argv: *const *const u8) -> isize {
+    let args = c_ffi::Args::new(argc, argv).expect("To get function arguments");
+
+    let args = match cli::Cli::new(args.into_iter()) {
         Ok(args) => args,
         Err(code) => std::process::exit(code),
     };

@@ -1,163 +1,68 @@
 use std::path::PathBuf;
 
-const USAGE: &str = "Find files utility
+use arg::Args;
 
-USAGE:
-    sagasu.exe [OPTIONS] <pattern> [path]...
+#[derive(Args, Debug)]
+///Find files utility
+pub struct Cli {
+    #[arg(short, long)]
+    ///Flag whether to print directories or not. By default is true, if file is not specified
+    pub dir: bool,
+    #[arg(short, long)]
+    ///Flag whether to print executables or not. By default is true, if dir is not specified
+    pub file: bool,
+    #[arg(short, long)]
+    ///Specifies that usage comes from another application. Disables colors.
+    pub machine: bool,
+    #[arg(short, long)]
+    ///Follow symbolic links. By default they are not followed.
+    pub sym: bool,
+    #[arg(short, long)]
+    ///Ignore errors during search.
+    pub quiet: bool,
 
-OPTIONS:
-    -d, --dir                 Flag whether to print directories or not. By default is true, if file is not specified
-    -f, --file                Flag whether to print executables or not. By default is true, if dir is not specified
-    -h, --help                Prints help information
-    -m, --machine             Specifies that usage comes from another application. Disables colors.
-    -q, --quiet               Ignore errors during search.
-    -s, --symlink             Follow symbolic links. By default they are not followed.
-    -V, --version             Prints version information
-        --hop <max_hop>       Specifies depth of recursion.
-        --minhop <min_hop>    Minimum number of hops before starting to look. [default: 0]
-        --sep <sep>           Specifies separator character between each entry. By default newline
-
-ARGS:
-    <pattern>    Pattern to filter by. Allowed types: Regex
-    <path>...    Specifies directory where to look. [default: .]
-";
-
-#[derive(Debug)]
-pub struct Args {
+    #[arg(long = "minhop")]
+    ///Minimum number of hops before starting to look. [default: 0]
     pub min_hop: usize,
+    #[arg(long = "hop", default_value = "core::usize::MAX")]
+    ///Specifies depth of recursion.
     pub max_hop: usize,
+    #[arg(long = "sep", default_value = "'\\n'")]
+    ///Specifies separator character between each entry. By default newline
     pub sep: char,
 
-    pub dir: bool,
-    pub file: bool,
-    pub sym: bool,
-    pub quiet: bool,
-    pub machine: bool,
 
+    #[arg(required)]
     ///Pattern to filter by. Allowed types: Regex
     pub pattern: regex::Regex,
-    ///Specifies directory where to look.
+    ///Specifies directory where to look. [default: .]
     pub path: Vec<PathBuf>,
 }
 
-impl Args {
-    #[inline]
-    pub fn new() -> Result<Self, i32> {
-        let mut min_hop = 0;
-        let mut max_hop = std::usize::MAX;
-        let mut sep = '\n';
+impl Cli {
+    pub fn new<'a, T: IntoIterator<Item = &'a str>>(args: T) -> Result<Self, i32> {
+        let args = args.into_iter().skip(1);
 
-        let mut dir = false;
-        let mut file = false;
-        let mut sym = false;
-        let mut quiet = false;
-        let mut machine = false;
-
-        let mut pattern = None;
-        let mut path = Vec::new();
-
-        let mut args = std::env::args().skip(1);
-
-        while let Some(arg) = args.next() {
-            if arg.starts_with('-') {
-                match &arg[1..] {
-                    "d" | "-dir" => dir = true,
-                    "f" | "-file" => file = true,
-                    "h" | "-help" => {
-                        println!("{}", USAGE);
-                        return Err(0);
-                    },
-                    "m" | "-machine" => machine = true,
-                    "q" | "-quiet" => quiet = true,
-                    "s" | "-symlink" => sym = true,
-                    "-hop" => match args.next() {
-                        Some(new_hop) => match new_hop.parse() {
-                            Ok(new_hop) => max_hop = new_hop,
-                            Err(_) => {
-                                eprintln!("Flag {} is specified with invalid value '{}'. Should be integer", arg, new_hop);
-                                return Err(2);
-                            }
-                        },
-                        None => {
-                            eprintln!("Flag {} is specified, but argument is missing", arg);
-                            return Err(2);
-                        }
-                    },
-                    "-minhop" => match args.next() {
-                        Some(new_hop) => match new_hop.parse() {
-                            Ok(new_hop) => min_hop = new_hop,
-                            Err(_) => {
-                                eprintln!("Flag {} is specified with invalid value '{}'. Should be integer", arg, new_hop);
-                                return Err(2);
-                            }
-                        },
-                        None => {
-                            eprintln!("Flag {} is specified, but argument is missing", arg);
-                            return Err(2);
-                        }
-                    },
-                    "-sep" => match args.next() {
-                        Some(new_sep) => match new_sep.parse() {
-                            Ok(new_sep) => sep = new_sep,
-                            Err(_) => {
-                                eprintln!("Flag {} is specified with invalid value '{}'. Should be single character", arg, new_sep);
-                                return Err(2);
-                            }
-                        },
-                        None => {
-                            eprintln!("Flag {} is specified, but argument is missing", arg);
-                            return Err(2);
-                        }
-                    },
-                    _ => {
-                        eprintln!("Invalid flag '{}' is specified", arg);
-                        println!("{}", USAGE);
-                        return Err(2);
-                    }
-                }
-            } else if pattern.is_none() {
-                match regex::Regex::new(&arg) {
-                    Ok(new) => pattern = Some(new),
-                    Err(error) => {
-                        eprintln!("Invalid pattern. Error: {}" , error);
-                        return Err(2);
-                    }
-                }
-            } else {
-                path.push(arg.into());
+        Cli::from_args(args).map_err(|err| match err.is_help() {
+            true => {
+                println!("{}", Cli::HELP);
+                0
+            },
+            false => {
+                eprintln!("{}", err);
+                2
+            },
+        }).map(|mut args| {
+            if args.path.len() == 0 {
+                args.path.push(".".into());
             }
-        }
 
-        let pattern = match pattern {
-            Some(pattern) => pattern,
-            None => {
-                eprintln!("Missing pattern.");
-                println!("{}", USAGE);
-                return Err(2);
+            if !args.file && !args.dir {
+                args.file = true;
+                args.dir = true;
             }
-        };
 
-        if path.len() == 0 {
-            path.push(".".into());
-        }
-
-        if !file && !dir {
-            file = true;
-            dir = true;
-        }
-
-        Ok(Self {
-            min_hop,
-            max_hop,
-            sep,
-            dir,
-            file,
-            sym,
-            quiet,
-            machine,
-            pattern,
-            path,
-
+            args
         })
     }
 }
